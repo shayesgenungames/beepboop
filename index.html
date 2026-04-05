@@ -7,6 +7,7 @@
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { background: #000; overflow: hidden; }
     canvas { display: block; }
+
     #ui {
       position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
       display: flex; flex-direction: column; align-items: center; gap: 10px;
@@ -23,58 +24,87 @@
       padding: 8px 18px; pointer-events: all; cursor: pointer;
       background: rgba(0,0,0,0.5); transition: border-color 0.2s, color 0.2s;
     }
-    #dropzone:hover, #dropzone.over { border-color: #0af; color: #0af; }
+    #dropzone:hover { border-color: #0af; color: #0af; }
     #dropzone input { display: none; }
     body.dragging #dropzone { border-color: #0af; color: #0af; }
 
-    /* ── Start overlay ── */
     #startscreen {
       position: fixed; inset: 0; z-index: 100;
       display: flex; flex-direction: column;
       align-items: center; justify-content: center;
       background: rgba(0,0,0,0.85); cursor: pointer;
     }
-    #startscreen h1 {
-      font: 700 48px monospace; color: #0af; letter-spacing: 6px;
-      text-transform: uppercase; margin-bottom: 16px;
-    }
-    #startscreen p { font: 14px monospace; color: #555; letter-spacing: 2px; }
+    #startscreen h1 { font: 700 48px monospace; color: #0af; letter-spacing: 6px; margin-bottom: 16px; }
+    #startscreen p  { font: 14px monospace; color: #555; letter-spacing: 2px; }
     #startscreen.hidden { display: none; }
 
-    /* ── Slider panel ── */
+    /* ── Panel ── */
     #panel {
-      position: fixed; top: 0; right: 0; height: 100%;
-      width: 220px; background: rgba(0,0,0,0.75);
-      backdrop-filter: blur(6px);
-      border-left: 1px solid #222;
-      display: flex; flex-direction: column;
+      position: fixed; top: 0; right: 0; height: 100%; width: 260px;
+      background: rgba(0,0,0,0.82); backdrop-filter: blur(8px);
+      border-left: 1px solid #1a1a1a;
       transform: translateX(100%); transition: transform 0.25s ease;
-      overflow-y: auto; padding: 14px 12px 20px;
-      font: 12px monospace; color: #ccc;
+      overflow-y: auto; padding: 14px 14px 30px;
+      font: 11px monospace; color: #aaa;
     }
     #panel.open { transform: translateX(0); }
-    #panel h2 { font-size: 11px; color: #0af; letter-spacing: 2px; margin-bottom: 14px; text-transform: uppercase; }
-    .row { margin-bottom: 10px; }
-    .row label { display: flex; justify-content: space-between; margin-bottom: 3px; }
-    .row label span { color: #0af; min-width: 36px; text-align: right; }
-    .row input[type=range] {
-      width: 100%; accent-color: #0af;
-      height: 3px; cursor: pointer;
+
+    #panel-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 12px;
     }
+    #panel-header h2 { font-size: 11px; color: #0af; letter-spacing: 3px; text-transform: uppercase; }
+
+    /* curve buttons */
+    #curve-btns { display: flex; gap: 4px; }
+    .cbtn {
+      font: 10px monospace; color: #555; border: 1px solid #333;
+      background: none; border-radius: 3px; padding: 2px 6px; cursor: pointer;
+      transition: all 0.15s;
+    }
+    .cbtn.active { color: #0af; border-color: #0af; }
+
     .section-title {
-      font-size: 10px; color: #555; letter-spacing: 1px;
-      text-transform: uppercase; margin: 14px 0 8px;
-      border-top: 1px solid #222; padding-top: 10px;
+      font-size: 9px; color: #444; letter-spacing: 2px; text-transform: uppercase;
+      margin: 14px 0 8px; border-top: 1px solid #181818; padding-top: 10px;
     }
+
+    /* animated param block */
+    .param-block { margin-bottom: 14px; }
+    .param-top { display: flex; justify-content: space-between; margin-bottom: 4px; }
+    .param-top .plabel { color: #888; }
+    .param-top .pval   { color: #0af; font-size: 12px; }
+
+    /* the main animated bar */
+    .param-bar {
+      width: 100%; accent-color: #0af;
+      height: 4px; cursor: default; margin-bottom: 6px;
+      pointer-events: none; opacity: 0.6;
+    }
+    .param-bar.manual { pointer-events: all; cursor: pointer; opacity: 1; }
+
+    /* min / max row */
+    .minmax { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 4px; }
+    .minmax-cell label { display: block; color: #444; font-size: 9px; margin-bottom: 2px; }
+    .minmax-cell input[type=range] { width: 100%; accent-color: #555; height: 2px; cursor: pointer; }
+
+    /* speed row */
+    .spd-row { display: flex; align-items: center; gap: 6px; }
+    .spd-row label { color: #444; font-size: 9px; white-space: nowrap; }
+    .spd-row input[type=range] { flex: 1; accent-color: #0af; height: 2px; cursor: pointer; }
+    .spd-row .sval { color: #555; font-size: 9px; min-width: 28px; text-align: right; }
+
+    /* static (audio) param */
+    .static-block { margin-bottom: 10px; }
+    .static-block .param-top { margin-bottom: 3px; }
+    .static-block input[type=range] { width: 100%; accent-color: #0af; height: 3px; cursor: pointer; }
+
     #toggle-panel {
-      position: fixed; top: 50%; right: 0;
-      transform: translateY(-50%);
-      background: rgba(0,0,0,0.6); border: 1px solid #333;
-      border-right: none; border-radius: 6px 0 0 6px;
-      color: #aaa; font: 13px monospace; padding: 10px 6px;
-      cursor: pointer; writing-mode: vertical-rl;
-      letter-spacing: 2px; transition: color 0.2s;
-      z-index: 10;
+      position: fixed; top: 50%; right: 0; transform: translateY(-50%);
+      background: rgba(0,0,0,0.6); border: 1px solid #2a2a2a; border-right: none;
+      border-radius: 6px 0 0 6px; color: #555; font: 12px monospace;
+      padding: 10px 6px; cursor: pointer; writing-mode: vertical-rl;
+      letter-spacing: 2px; transition: color 0.2s; z-index: 10;
     }
     #toggle-panel:hover { color: #0af; }
   </style>
@@ -85,32 +115,18 @@
   <p>click to start</p>
 </div>
 <canvas id="c"></canvas>
-
 <div id="toggle-panel">PARAMS</div>
-
 <div id="panel">
-  <h2>Parameters</h2>
-
-  <div class="section-title">Motion</div>
-  <div class="row"><label>Rot Speed <span id="v-rotSpeed">1.00</span></label><input type="range" id="s-rotSpeed"  min="0" max="4"   step="0.01" value="1.0"></div>
-  <div class="row"><label>Deform    <span id="v-deform">1.20</span></label><input type="range" id="s-deform"    min="0" max="4"   step="0.01" value="1.2"></div>
-  <div class="row"><label>Wave Amp  <span id="v-waveAmp">0.50</span></label><input type="range" id="s-waveAmp"  min="0" max="3"   step="0.01" value="0.5"></div>
-
-  <div class="section-title">Shape</div>
-  <div class="row"><label>Noise Amp <span id="v-noiseAmp">1.50</span></label><input type="range" id="s-noiseAmp"  min="0" max="5"   step="0.01" value="1.5"></div>
-  <div class="row"><label>Link Blob <span id="v-linkBlend">1.50</span></label><input type="range" id="s-linkBlend" min="0.1" max="5" step="0.01" value="1.5"></div>
-
-  <div class="section-title">Color</div>
-  <div class="row"><label>R Mul     <span id="v-cMulX">1.50</span></label><input type="range" id="s-cMulX" min="0" max="4" step="0.01" value="1.5"></div>
-  <div class="row"><label>G Mul     <span id="v-cMulY">0.80</span></label><input type="range" id="s-cMulY" min="0" max="4" step="0.01" value="0.8"></div>
-
-  <div class="section-title">Audio Mix</div>
-  <div class="row"><label>Bass Drive  <span id="v-bassDrive">1.00</span></label><input type="range" id="s-bassDrive"  min="0" max="4" step="0.01" value="1.0"></div>
-  <div class="row"><label>Mid Drive   <span id="v-midDrive">1.00</span></label><input type="range" id="s-midDrive"   min="0" max="4" step="0.01" value="1.0"></div>
-  <div class="row"><label>High Drive  <span id="v-highDrive">1.00</span></label><input type="range" id="s-highDrive"  min="0" max="4" step="0.01" value="1.0"></div>
-  <div class="row"><label>Smoothing   <span id="v-smooth">0.15</span></label><input type="range" id="s-smooth"     min="0.01" max="1" step="0.01" value="0.15"></div>
+  <div id="panel-header">
+    <h2>Parameters</h2>
+    <div id="curve-btns">
+      <button class="cbtn active" data-curve="sine">SINE</button>
+      <button class="cbtn"        data-curve="tri">TRI</button>
+      <button class="cbtn"        data-curve="saw">SAW</button>
+    </div>
+  </div>
+  <div id="param-blocks"></div>
 </div>
-
 <div id="ui">
   <div id="label"></div>
   <div id="dropzone">
@@ -125,12 +141,10 @@ const gl = canvas.getContext('webgl2');
 if (!gl) { document.body.innerHTML = '<p style="color:red;padding:20px">WebGL2 not supported</p>'; }
 
 function resize() {
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
+  canvas.width = window.innerWidth; canvas.height = window.innerHeight;
   gl.viewport(0, 0, canvas.width, canvas.height);
 }
-window.addEventListener('resize', resize);
-resize();
+window.addEventListener('resize', resize); resize();
 
 // ─── Presets ─────────────────────────────────────────────────────────────────
 const presets = [
@@ -141,11 +155,9 @@ const presets = [
   { name:"COSMIC",   c1:[0.8,0.6,0.0],  c2:[0.3,0.0,0.6],  c3:[0.05,0.0,0.3], rotSpeed:0.7, deform:0.8, noiseAmp:2.5, linkBlend:3.0, waveAmp:0.3, cMulY:0.5, cMulX:1.2 },
 ];
 let presetIdx = 0;
-
 const label = document.getElementById('label');
 function showLabel(text) {
-  label.textContent = text;
-  label.style.opacity = '0.9';
+  label.textContent = text; label.style.opacity = '0.9';
   clearTimeout(showLabel._t);
   showLabel._t = setTimeout(() => label.style.opacity = '0', 2500);
 }
@@ -177,156 +189,265 @@ gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
 // ─── Shaders ─────────────────────────────────────────────────────────────────
 const vsSource = `#version 300 es
 in vec2 position;
-void main() { gl_Position = vec4(position, 0.0, 1.0); }`;
+void main(){ gl_Position=vec4(position,0.0,1.0); }`;
 
 const fsSource = `#version 300 es
 precision highp float;
-uniform vec2  iResolution;
-uniform float iTime;
-uniform vec2  iMouse;
+uniform vec2  iResolution; uniform float iTime; uniform vec2 iMouse;
 uniform sampler2D iChannel0;
-
-uniform vec3  uColor1;
-uniform vec3  uColor2;
-uniform vec3  uColor3;
-uniform float uRotSpeed;
-uniform float uDeform;
-uniform float uNoiseAmp;
-uniform float uLinkBlend;
-uniform float uWaveAmp;
-uniform float uCMulY;
-uniform float uCMulX;
-
-// Audio FFT bands (0..1)
-uniform float uBass;
-uniform float uMid;
-uniform float uHigh;
-uniform float uEnergy;
-
+uniform vec3  uColor1,uColor2,uColor3;
+uniform float uRotSpeed,uDeform,uNoiseAmp,uLinkBlend,uWaveAmp,uCMulY,uCMulX;
+uniform float uBass,uMid,uHigh,uEnergy;
 out vec4 fragColor;
 
-vec3 rotateY(vec3 v, float t){
-    float cost=cos(t); float sint=sin(t);
-    return vec3(v.x*cost+v.z*sint, v.y, -v.x*sint+v.z*cost);
+vec3 rotateY(vec3 v,float t){
+  float c=cos(t),s=sin(t);
+  return vec3(v.x*c+v.z*s,v.y,-v.x*s+v.z*c);
 }
-float smin(float a, float b, float k){
-    float h=clamp(0.5+0.5*(b-a)/k,0.0,1.0);
-    return mix(b,a,h)-k*h*(1.0-h);
+float smin(float a,float b,float k){
+  float h=clamp(0.5+0.5*(b-a)/k,0.0,1.0);
+  return mix(b,a,h)-k*h*(1.0-h);
 }
 float noise(vec3 p){
-    float t=iTime;
-    vec3 np=normalize(p);
-    float a=texture(iChannel0,t/20.+np.xy).x;
-    float b=texture(iChannel0,t/20.+.77+np.yz).x;
-    a=mix(a,.5,abs(np.x)); b=mix(b,.5,abs(np.z));
-    float n=a+b-.4;
-    return mix(n,.5,abs(np.y)/2.);
+  float t=iTime; vec3 np=normalize(p);
+  float a=texture(iChannel0,t/20.+np.xy).x;
+  float b=texture(iChannel0,t/20.+.77+np.yz).x;
+  a=mix(a,.5,abs(np.x)); b=mix(b,.5,abs(np.z));
+  return mix(a+b-.4,.5,abs(np.y)/2.);
 }
 float map(vec3 p){
-    float noiseScale = uNoiseAmp + uBass * 1.5;
-    float d=(-1.*length(p)+3.)+noiseScale*noise(p);
-    d=min(d,(length(p)-1.5)+noiseScale*noise(p));
-    float m=uLinkBlend + uMid * 0.8;
-    float s=.03;
-    d=smin(d,max(abs(p.x)-s,      abs(p.y+p.z*.2)-.07),m);
-    d=smin(d,max(abs(p.z)-s,      abs(p.x+p.y/2.)-.07),m);
-    d=smin(d,max(abs(p.z-p.y*.4)-s,abs(p.x-p.y*.2)-.07),m);
-    d=smin(d,max(abs(p.z*.2-p.y)-s,abs(p.x+p.z)-.07),m);
-    d=smin(d,max(abs(p.z*-.2+p.y)-s,abs(-p.x+p.z)-.07),m);
-    return d;
+  float ns=uNoiseAmp+uBass*1.5;
+  float d=(-1.*length(p)+3.)+ns*noise(p);
+  d=min(d,(length(p)-1.5)+ns*noise(p));
+  float m=uLinkBlend+uMid*0.8,s=.03;
+  d=smin(d,max(abs(p.x)-s,abs(p.y+p.z*.2)-.07),m);
+  d=smin(d,max(abs(p.z)-s,abs(p.x+p.y/2.)-.07),m);
+  d=smin(d,max(abs(p.z-p.y*.4)-s,abs(p.x-p.y*.2)-.07),m);
+  d=smin(d,max(abs(p.z*.2-p.y)-s,abs(p.x+p.z)-.07),m);
+  d=smin(d,max(abs(p.z*-.2+p.y)-s,abs(-p.x+p.z)-.07),m);
+  return d;
 }
-
 void main(){
-    vec2 uv=gl_FragCoord.xy*2.0/iResolution.xy-1.0;
-    uv.x*=iResolution.x/iResolution.y;
-    vec3 ray=normalize(vec3(uv.x,uv.y,1.0));
-    vec3 color=vec3(0.0);
-    const int rayCount=128;
-    float t=0.0;
-    for(int r=1;r<=rayCount;r++){
-        vec3 p=vec3(0.0,0.0,-3.0)+ray*t;
-        p=rotateY(p,iMouse.x/iResolution.x*2.0*3.14159);
-        p=rotateY(p,iTime/3.0*(uRotSpeed + uEnergy*1.5));
-        float mask=max(0.0,1.0-length(p/3.0));
-        p=rotateY(p,mask*sin(iTime/2.0)*(uDeform + uBass*2.0));
-        p.y+=sin(iTime+p.x)*mask*(uWaveAmp + uMid*0.8);
-        p*=1.1+(sin(iTime/2.0)*mask*0.3);
-        float d=map(p);
-        if(d<0.01||r==rayCount){
-            float iter=float(r)/float(rayCount);
-            float ao=1.0-iter; ao*=ao; ao=1.0-ao;
-            float mk=max(0.0,1.0-length(p/2.0));
-            mk*=abs(sin(iTime*-1.5+length(p)+p.x)-0.2);
-            vec3 c1=uColor1+vec3(uHigh*0.3, uBass*0.2, uMid*0.3);
-            color+=2.0*c1*max(0.0,noise(p)*4.0-2.6)*mk;
-            color+=uColor2*ao*6.0*(1.0+uEnergy*0.5);
-            color+=uColor3*(t/8.0);
-            color*=2.0;
-            color-=0.15;
-            break;
-        }
-        t+=d*0.5;
+  vec2 uv=gl_FragCoord.xy*2.0/iResolution.xy-1.0;
+  uv.x*=iResolution.x/iResolution.y;
+  vec3 ray=normalize(vec3(uv.x,uv.y,1.0)),color=vec3(0.0);
+  const int rc=128; float t=0.0;
+  for(int r=1;r<=rc;r++){
+    vec3 p=vec3(0,0,-3)+ray*t;
+    p=rotateY(p,iMouse.x/iResolution.x*6.28318);
+    p=rotateY(p,iTime/3.0*(uRotSpeed+uEnergy*1.5));
+    float mask=max(0.0,1.0-length(p/3.0));
+    p=rotateY(p,mask*sin(iTime/2.0)*(uDeform+uBass*2.0));
+    p.y+=sin(iTime+p.x)*mask*(uWaveAmp+uMid*0.8);
+    p*=1.1+(sin(iTime/2.0)*mask*0.3);
+    float d=map(p);
+    if(d<0.01||r==rc){
+      float ao=1.0-float(r)/float(rc); ao*=ao; ao=1.0-ao;
+      float mk=max(0.0,1.0-length(p/2.0))*abs(sin(iTime*-1.5+length(p)+p.x)-0.2);
+      vec3 c1=uColor1+vec3(uHigh*0.3,uBass*0.2,uMid*0.3);
+      color+=2.0*c1*max(0.0,noise(p)*4.0-2.6)*mk;
+      color+=uColor2*ao*6.0*(1.0+uEnergy*0.5);
+      color+=uColor3*(t/8.0);
+      color=color*2.0-0.15; break;
     }
-    vec2 vuv=gl_FragCoord.xy/iResolution.xy;
-    vuv*=1.0-vuv.yx;
-    float vig=pow(vuv.x*vuv.y*20.0,0.25);
-    color*=vig;
-    color.y*=uCMulY;
-    color.x*=uCMulX*(1.0+uBass*0.3);
-    fragColor=vec4(color,1.0);
+    t+=d*0.5;
+  }
+  vec2 vuv=gl_FragCoord.xy/iResolution.xy; vuv*=1.0-vuv.yx;
+  color*=pow(vuv.x*vuv.y*20.0,0.25);
+  color.y*=uCMulY; color.x*=uCMulX*(1.0+uBass*0.3);
+  fragColor=vec4(color,1.0);
 }`;
 
 function compileShader(type, src) {
   const s = gl.createShader(type);
-  gl.shaderSource(s, src);
-  gl.compileShader(s);
+  gl.shaderSource(s, src); gl.compileShader(s);
   if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) console.error(gl.getShaderInfoLog(s));
   return s;
 }
 const prog = gl.createProgram();
 gl.attachShader(prog, compileShader(gl.VERTEX_SHADER, vsSource));
 gl.attachShader(prog, compileShader(gl.FRAGMENT_SHADER, fsSource));
-gl.linkProgram(prog);
-gl.useProgram(prog);
+gl.linkProgram(prog); gl.useProgram(prog);
 
 const buf = gl.createBuffer();
 gl.bindBuffer(gl.ARRAY_BUFFER, buf);
-gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, 1,1]), gl.STATIC_DRAW);
+gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1,1,-1,-1,1,1,1]), gl.STATIC_DRAW);
 const posLoc = gl.getAttribLocation(prog, 'position');
 gl.enableVertexAttribArray(posLoc);
 gl.vertexAttribPointer(posLoc, 2, gl.FLOAT, false, 0, 0);
 
-// Uniform locations
 const U = {};
 ['iResolution','iTime','iMouse','iChannel0','uColor1','uColor2','uColor3',
  'uRotSpeed','uDeform','uNoiseAmp','uLinkBlend','uWaveAmp','uCMulY','uCMulX',
  'uBass','uMid','uHigh','uEnergy'].forEach(n => U[n] = gl.getUniformLocation(prog, n));
-
 gl.uniform1i(U.iChannel0, 0);
 gl.activeTexture(gl.TEXTURE0);
 gl.bindTexture(gl.TEXTURE_2D, noiseTex);
 
-// ─── Slider state ─────────────────────────────────────────────────────────────
-const sliders = {
-  rotSpeed:  1.0, deform:    1.2, waveAmp:  0.5,
-  noiseAmp:  1.5, linkBlend: 1.5,
-  cMulX:     1.5, cMulY:     0.8,
-  bassDrive: 1.0, midDrive:  1.0, highDrive: 1.0, smooth: 0.15,
-};
+// ─── Param system ─────────────────────────────────────────────────────────────
+// Animated params: oscillate between min..max at speed (Hz), offset by phase
+const ANIM_PARAMS = [
+  { key:'rotSpeed',  label:'Rot Speed', absMin:0,   absMax:4,   min:0.4, max:2.0, speed:0.12, phase:0.0 },
+  { key:'deform',    label:'Deform',    absMin:0,   absMax:4,   min:0.5, max:2.5, speed:0.09, phase:1.1 },
+  { key:'waveAmp',   label:'Wave',      absMin:0,   absMax:3,   min:0.1, max:1.2, speed:0.18, phase:2.3 },
+  { key:'noiseAmp',  label:'Noise',     absMin:0,   absMax:5,   min:0.6, max:3.0, speed:0.07, phase:3.7 },
+  { key:'linkBlend', label:'Links',     absMin:0.1, absMax:5,   min:0.8, max:3.0, speed:0.11, phase:0.7 },
+  { key:'cMulX',     label:'R Mul',     absMin:0,   absMax:4,   min:0.8, max:2.5, speed:0.15, phase:1.8 },
+  { key:'cMulY',     label:'G Mul',     absMin:0,   absMax:4,   min:0.3, max:1.5, speed:0.13, phase:4.2 },
+];
+// Static (audio) params
+const STATIC_PARAMS = [
+  { key:'bassDrive', label:'Bass Drive', absMin:0, absMax:4,  val:1.0 },
+  { key:'midDrive',  label:'Mid Drive',  absMin:0, absMax:4,  val:1.0 },
+  { key:'highDrive', label:'High Drive', absMin:0, absMax:4,  val:1.0 },
+  { key:'smooth',    label:'Smoothing',  absMin:0.01, absMax:1, val:0.15 },
+];
 
-function setSlider(key, val) {
-  sliders[key] = val;
-  const el = document.getElementById('v-' + key);
-  if (el) el.textContent = val.toFixed(2);
-  const inp = document.getElementById('s-' + key);
-  if (inp) inp.value = val;
+// Runtime state
+const pState = {};
+ANIM_PARAMS.forEach(p => {
+  pState[p.key] = { val:(p.min+p.max)/2, min:p.min, max:p.max, speed:p.speed, phase:p.phase };
+});
+const sState = {};
+STATIC_PARAMS.forEach(p => { sState[p.key] = p.val; });
+
+// Curve
+let curve = 'sine';
+function evalCurve(t, speed, phase) {
+  const x = t * speed + phase;
+  if (curve === 'sine') return 0.5 + 0.5 * Math.sin(x * Math.PI * 2);
+  if (curve === 'tri')  return 1 - Math.abs(2 * (((x % 1) + 1) % 1) - 1);
+  /* saw */              return ((x % 1) + 1) % 1;
 }
 
-// Bind slider inputs
-Object.keys(sliders).forEach(key => {
-  const inp = document.getElementById('s-' + key);
-  if (!inp) return;
-  inp.addEventListener('input', () => setSlider(key, parseFloat(inp.value)));
+function animateParams(t) {
+  ANIM_PARAMS.forEach(p => {
+    const s = pState[p.key];
+    if (s.speed < 0.001) return; // manual — don't touch
+    const u = evalCurve(t, s.speed, s.phase);
+    s.val = s.min + (s.max - s.min) * u;
+    const barEl = document.getElementById('bar-' + p.key);
+    const valEl = document.getElementById('val-' + p.key);
+    if (barEl) barEl.value = s.val;
+    if (valEl) valEl.textContent = s.val.toFixed(2);
+  });
+}
+
+// ─── Build panel HTML ─────────────────────────────────────────────────────────
+const container = document.getElementById('param-blocks');
+
+function makeAnimBlock(p) {
+  const s = pState[p.key];
+  const div = document.createElement('div');
+  div.className = 'param-block';
+  div.innerHTML = `
+    <div class="param-top">
+      <span class="plabel">${p.label.toUpperCase()}</span>
+      <span class="pval" id="val-${p.key}">${s.val.toFixed(2)}</span>
+    </div>
+    <input type="range" class="param-bar" id="bar-${p.key}"
+      min="${p.absMin}" max="${p.absMax}" step="0.01" value="${s.val}">
+    <div class="minmax">
+      <div class="minmax-cell">
+        <label>MIN <span id="minv-${p.key}">${s.min.toFixed(2)}</span></label>
+        <input type="range" id="min-${p.key}" min="${p.absMin}" max="${p.absMax}" step="0.01" value="${s.min}">
+      </div>
+      <div class="minmax-cell">
+        <label>MAX <span id="maxv-${p.key}">${s.max.toFixed(2)}</span></label>
+        <input type="range" id="max-${p.key}" min="${p.absMin}" max="${p.absMax}" step="0.01" value="${s.max}">
+      </div>
+    </div>
+    <div class="spd-row">
+      <label>SPD</label>
+      <input type="range" id="spd-${p.key}" min="0" max="1" step="0.005" value="${s.speed}">
+      <span class="sval" id="spdv-${p.key}">${s.speed.toFixed(3)}</span>
+    </div>`;
+
+  // wire events after inserting
+  container.appendChild(div);
+
+  const barEl  = document.getElementById('bar-' + p.key);
+  const minEl  = document.getElementById('min-' + p.key);
+  const maxEl  = document.getElementById('max-' + p.key);
+  const spdEl  = document.getElementById('spd-' + p.key);
+  const minvEl = document.getElementById('minv-' + p.key);
+  const maxvEl = document.getElementById('maxv-' + p.key);
+  const spdvEl = document.getElementById('spdv-' + p.key);
+
+  function refreshBarMode() {
+    if (pState[p.key].speed < 0.001) {
+      barEl.classList.add('manual');
+    } else {
+      barEl.classList.remove('manual');
+    }
+  }
+  refreshBarMode();
+
+  barEl.addEventListener('input', () => {
+    if (pState[p.key].speed >= 0.001) return;
+    pState[p.key].val = parseFloat(barEl.value);
+    document.getElementById('val-' + p.key).textContent = pState[p.key].val.toFixed(2);
+  });
+
+  minEl.addEventListener('input', () => {
+    pState[p.key].min = parseFloat(minEl.value);
+    minvEl.textContent = pState[p.key].min.toFixed(2);
+  });
+  maxEl.addEventListener('input', () => {
+    pState[p.key].max = parseFloat(maxEl.value);
+    maxvEl.textContent = pState[p.key].max.toFixed(2);
+  });
+  spdEl.addEventListener('input', () => {
+    pState[p.key].speed = parseFloat(spdEl.value);
+    spdvEl.textContent = pState[p.key].speed.toFixed(3);
+    refreshBarMode();
+  });
+}
+
+function makeStaticBlock(p) {
+  const div = document.createElement('div');
+  div.className = 'static-block';
+  div.innerHTML = `
+    <div class="param-top">
+      <span class="plabel">${p.label.toUpperCase()}</span>
+      <span class="pval" id="val-${p.key}">${p.val.toFixed(2)}</span>
+    </div>
+    <input type="range" min="${p.absMin}" max="${p.absMax}" step="0.01" value="${p.val}" id="s-${p.key}">`;
+  container.appendChild(div);
+  document.getElementById('s-' + p.key).addEventListener('input', function() {
+    sState[p.key] = parseFloat(this.value);
+    document.getElementById('val-' + p.key).textContent = sState[p.key].toFixed(2);
+  });
+}
+
+// Motion section
+const motionTitle = document.createElement('div');
+motionTitle.className = 'section-title'; motionTitle.textContent = 'Motion';
+container.appendChild(motionTitle);
+['rotSpeed','deform','waveAmp'].forEach(k => makeAnimBlock(ANIM_PARAMS.find(p => p.key === k)));
+
+const shapeTitle = document.createElement('div');
+shapeTitle.className = 'section-title'; shapeTitle.textContent = 'Shape';
+container.appendChild(shapeTitle);
+['noiseAmp','linkBlend'].forEach(k => makeAnimBlock(ANIM_PARAMS.find(p => p.key === k)));
+
+const colorTitle = document.createElement('div');
+colorTitle.className = 'section-title'; colorTitle.textContent = 'Color';
+container.appendChild(colorTitle);
+['cMulX','cMulY'].forEach(k => makeAnimBlock(ANIM_PARAMS.find(p => p.key === k)));
+
+const audioTitle = document.createElement('div');
+audioTitle.className = 'section-title'; audioTitle.textContent = 'Audio Mix';
+container.appendChild(audioTitle);
+STATIC_PARAMS.forEach(makeStaticBlock);
+
+// Curve buttons
+document.querySelectorAll('.cbtn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    curve = btn.dataset.curve;
+    document.querySelectorAll('.cbtn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  });
 });
 
 // Toggle panel
@@ -334,44 +455,44 @@ document.getElementById('toggle-panel').addEventListener('click', () => {
   document.getElementById('panel').classList.toggle('open');
 });
 
-function applyPreset(p) {
-  gl.uniform3fv(U.uColor1, p.c1);
-  gl.uniform3fv(U.uColor2, p.c2);
-  gl.uniform3fv(U.uColor3, p.c3);
-  setSlider('rotSpeed',  p.rotSpeed);
-  setSlider('deform',    p.deform);
-  setSlider('noiseAmp',  p.noiseAmp);
-  setSlider('linkBlend', p.linkBlend);
-  setSlider('waveAmp',   p.waveAmp);
-  setSlider('cMulY',     p.cMulY);
-  setSlider('cMulX',     p.cMulX);
+// ─── applyPreset ─────────────────────────────────────────────────────────────
+function applyPreset(pr) {
+  gl.uniform3fv(U.uColor1, pr.c1);
+  gl.uniform3fv(U.uColor2, pr.c2);
+  gl.uniform3fv(U.uColor3, pr.c3);
+  // Center each animated param's range around the preset value
+  const keys = ['rotSpeed','deform','waveAmp','noiseAmp','linkBlend','cMulX','cMulY'];
+  keys.forEach(k => {
+    const v   = pr[k];
+    const def = ANIM_PARAMS.find(p => p.key === k);
+    const half = (def.absMax - def.absMin) * 0.2;
+    pState[k].min = Math.max(def.absMin, v - half);
+    pState[k].max = Math.min(def.absMax, v + half);
+    // update UI
+    const minEl = document.getElementById('min-' + k);
+    const maxEl = document.getElementById('max-' + k);
+    if (minEl) { minEl.value = pState[k].min; document.getElementById('minv-' + k).textContent = pState[k].min.toFixed(2); }
+    if (maxEl) { maxEl.value = pState[k].max; document.getElementById('maxv-' + k).textContent = pState[k].max.toFixed(2); }
+  });
 }
 applyPreset(presets[0]);
 
 // ─── Web Audio / FFT ─────────────────────────────────────────────────────────
 let analyser = null, fftData = null;
-let bass = 0, mid = 0, high = 0, energy = 0;
-
-// Smooth FFT values
 let sBass = 0, sMid = 0, sHigh = 0, sEnergy = 0;
 
 function avg(arr, lo, hi) {
-  let s = 0;
-  for (let i = lo; i < hi; i++) s += arr[i];
+  let s = 0; for (let i = lo; i < hi; i++) s += arr[i];
   return s / ((hi - lo) * 255);
 }
-
 function updateFFT() {
   if (!analyser) return;
   analyser.getByteFrequencyData(fftData);
-  const len = fftData.length;
-  // Rough band splits for 44.1kHz FFT
-  bass   = avg(fftData, 0,              Math.floor(len * 0.05));
-  mid    = avg(fftData, Math.floor(len * 0.05), Math.floor(len * 0.35));
-  high   = avg(fftData, Math.floor(len * 0.35), Math.floor(len * 0.85));
-  energy = avg(fftData, 0, Math.floor(len * 0.85));
-
-  const sm = sliders.smooth;
+  const len = fftData.length, sm = sState.smooth;
+  const bass   = avg(fftData, 0,                    Math.floor(len * 0.05));
+  const mid    = avg(fftData, Math.floor(len*0.05), Math.floor(len * 0.35));
+  const high   = avg(fftData, Math.floor(len*0.35), Math.floor(len * 0.85));
+  const energy = avg(fftData, 0,                    Math.floor(len * 0.85));
   sBass   += (bass   - sBass)   * sm;
   sMid    += (mid    - sMid)    * sm;
   sHigh   += (high   - sHigh)  * sm;
@@ -381,79 +502,61 @@ function updateFFT() {
 function loadAudio(arrayBuffer) {
   const ctx = new AudioContext();
   ctx.decodeAudioData(arrayBuffer, decoded => {
-    // Stop previous
     if (loadAudio._src) try { loadAudio._src.stop(); } catch(e){}
-
     const src = ctx.createBufferSource();
-    src.buffer  = decoded;
-    src.loop    = true;
-    loadAudio._src = src;
-
+    src.buffer = decoded; src.loop = true; loadAudio._src = src;
     analyser = ctx.createAnalyser();
     analyser.fftSize = 2048;
     fftData = new Uint8Array(analyser.frequencyBinCount);
-
-    src.connect(analyser);
-    analyser.connect(ctx.destination);
-    src.start(0);
+    src.connect(analyser); analyser.connect(ctx.destination); src.start(0);
     showLabel(`♪ ${loadAudio._name || 'audio'} — looping`);
   });
 }
 
-// ─── Autoplay test.mp3 on first click ────────────────────────────────────────
 const startscreen = document.getElementById('startscreen');
 startscreen.addEventListener('click', () => {
   startscreen.classList.add('hidden');
-  fetch('test.mp3')
-    .then(r => r.arrayBuffer())
-    .then(buf => { loadAudio._name = 'test.mp3'; loadAudio(buf); });
+  fetch('test.mp3').then(r => r.arrayBuffer()).then(buf => { loadAudio._name = 'test.mp3'; loadAudio(buf); });
 }, { once: true });
 
-// ─── Drop / File input ───────────────────────────────────────────────────────
 const dropzone  = document.getElementById('dropzone');
 const fileinput = document.getElementById('fileinput');
-
 dropzone.addEventListener('click', () => fileinput.click());
 fileinput.addEventListener('change', e => {
-  const file = e.target.files[0];
-  if (!file) return;
-  loadAudio._name = file.name;
-  file.arrayBuffer().then(loadAudio);
+  const file = e.target.files[0]; if (!file) return;
+  loadAudio._name = file.name; file.arrayBuffer().then(loadAudio);
 });
-
 window.addEventListener('dragover',  e => { e.preventDefault(); document.body.classList.add('dragging'); });
-window.addEventListener('dragleave', e => { if (e.relatedTarget === null) document.body.classList.remove('dragging'); });
+window.addEventListener('dragleave', e => { if (!e.relatedTarget) document.body.classList.remove('dragging'); });
 window.addEventListener('drop', e => {
-  e.preventDefault();
-  document.body.classList.remove('dragging');
+  e.preventDefault(); document.body.classList.remove('dragging');
   const file = e.dataTransfer.files[0];
   if (!file || !file.type.startsWith('audio/')) return;
-  loadAudio._name = file.name;
-  file.arrayBuffer().then(loadAudio);
+  loadAudio._name = file.name; file.arrayBuffer().then(loadAudio);
 });
 
-// ─── Mouse ───────────────────────────────────────────────────────────────────
 let mouse = [0, 0];
 canvas.addEventListener('mousemove', e => { mouse = [e.clientX, e.clientY]; });
 
 // ─── Render loop ─────────────────────────────────────────────────────────────
 const start = performance.now();
 function render() {
-  updateFFT();
-  gl.uniform1f(U.uBass,   sBass   * sliders.bassDrive);
-  gl.uniform1f(U.uMid,    sMid    * sliders.midDrive);
-  gl.uniform1f(U.uHigh,   sHigh   * sliders.highDrive);
-  gl.uniform1f(U.uEnergy, sEnergy * sliders.bassDrive);
-
-  gl.uniform1f(U.uRotSpeed,  sliders.rotSpeed);
-  gl.uniform1f(U.uDeform,    sliders.deform);
-  gl.uniform1f(U.uNoiseAmp,  sliders.noiseAmp);
-  gl.uniform1f(U.uLinkBlend, sliders.linkBlend);
-  gl.uniform1f(U.uWaveAmp,   sliders.waveAmp);
-  gl.uniform1f(U.uCMulX,     sliders.cMulX);
-  gl.uniform1f(U.uCMulY,     sliders.cMulY);
-
   const t = (performance.now() - start) / 1000;
+  updateFFT();
+  animateParams(t);
+
+  gl.uniform1f(U.uBass,      sBass   * sState.bassDrive);
+  gl.uniform1f(U.uMid,       sMid    * sState.midDrive);
+  gl.uniform1f(U.uHigh,      sHigh   * sState.highDrive);
+  gl.uniform1f(U.uEnergy,    sEnergy * sState.bassDrive);
+  gl.uniform1f(U.uRotSpeed,  pState.rotSpeed.val);
+  gl.uniform1f(U.uDeform,    pState.deform.val);
+  gl.uniform1f(U.uNoiseAmp,  pState.noiseAmp.val);
+  gl.uniform1f(U.uLinkBlend, pState.linkBlend.val);
+  gl.uniform1f(U.uWaveAmp,   pState.waveAmp.val);
+  gl.uniform1f(U.uCMulX,     pState.cMulX.val);
+  gl.uniform1f(U.uCMulY,     pState.cMulY.val);
+
   gl.uniform2f(U.iResolution, canvas.width, canvas.height);
   gl.uniform1f(U.iTime, t);
   gl.uniform2f(U.iMouse, mouse[0], mouse[1]);
