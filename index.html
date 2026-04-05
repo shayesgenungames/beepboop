@@ -89,15 +89,52 @@
     .minmax-cell input[type=range] { width: 100%; accent-color: #555; height: 2px; cursor: pointer; }
 
     /* speed row */
-    .spd-row { display: flex; align-items: center; gap: 6px; }
+    .spd-row { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
     .spd-row label { color: #444; font-size: 9px; white-space: nowrap; }
     .spd-row input[type=range] { flex: 1; accent-color: #0af; height: 2px; cursor: pointer; }
     .spd-row .sval { color: #555; font-size: 9px; min-width: 28px; text-align: right; }
+
+    /* fft mix row */
+    .fft-row { display: flex; align-items: center; gap: 4px; }
+    .fft-row span { color: #444; font-size: 9px; white-space: nowrap; margin-right: 2px; }
+    .fft-btn {
+      font: 9px monospace; color: #444; border: 1px solid #2a2a2a;
+      background: none; border-radius: 2px; padding: 1px 5px; cursor: pointer;
+      transition: all 0.12s; flex-shrink: 0;
+    }
+    .fft-btn.active { color: #fa0; border-color: #fa0; }
+    .fft-row input[type=range] { flex: 1; accent-color: #fa0; height: 2px; cursor: pointer; }
+    .fft-row .fval { color: #555; font-size: 9px; min-width: 28px; text-align: right; }
 
     /* static (audio) param */
     .static-block { margin-bottom: 10px; }
     .static-block .param-top { margin-bottom: 3px; }
     .static-block input[type=range] { width: 100%; accent-color: #0af; height: 3px; cursor: pointer; }
+
+    /* save config */
+    #save-section { margin-top: 6px; }
+    #save-row { display: flex; gap: 6px; margin-bottom: 8px; }
+    #save-name {
+      flex: 1; background: #0a0a0a; border: 1px solid #2a2a2a; border-radius: 3px;
+      color: #ccc; font: 11px monospace; padding: 4px 7px; outline: none;
+    }
+    #save-name:focus { border-color: #0af; }
+    #save-btn {
+      background: none; border: 1px solid #0af; border-radius: 3px;
+      color: #0af; font: 10px monospace; padding: 4px 8px; cursor: pointer;
+      white-space: nowrap; transition: all 0.15s;
+    }
+    #save-btn:hover { background: #0af; color: #000; }
+    .saved-item {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 5px 7px; border-radius: 3px; margin-bottom: 4px;
+      background: #0a0a0a; border: 1px solid #1e1e1e; cursor: pointer;
+      transition: border-color 0.15s;
+    }
+    .saved-item:hover { border-color: #0af; }
+    .saved-item span { color: #aaa; font-size: 11px; }
+    .saved-item .del { color: #444; font-size: 10px; padding: 0 3px; cursor: pointer; }
+    .saved-item .del:hover { color: #f44; }
 
     #toggle-panel {
       position: fixed; top: 50%; right: 0; transform: translateY(-50%);
@@ -126,6 +163,14 @@
     </div>
   </div>
   <div id="param-blocks"></div>
+  <div class="section-title">Saved Configs</div>
+  <div id="save-section">
+    <div id="save-row">
+      <input id="save-name" type="text" placeholder="config name…" maxlength="32">
+      <button id="save-btn">SAVE</button>
+    </div>
+    <div id="saved-list"></div>
+  </div>
 </div>
 <div id="ui">
   <div id="label"></div>
@@ -306,7 +351,7 @@ const STATIC_PARAMS = [
 // Runtime state
 const pState = {};
 ANIM_PARAMS.forEach(p => {
-  pState[p.key] = { val:(p.min+p.max)/2, min:p.min, max:p.max, speed:p.speed, phase:p.phase };
+  pState[p.key] = { val:(p.min+p.max)/2, min:p.min, max:p.max, speed:p.speed, phase:p.phase, fftBand:'off', fftMix:0 };
 });
 const sState = {};
 STATIC_PARAMS.forEach(p => { sState[p.key] = p.val; });
@@ -361,6 +406,15 @@ function makeAnimBlock(p) {
       <label>SPD</label>
       <input type="range" id="spd-${p.key}" min="0" max="1" step="0.005" value="${s.speed}">
       <span class="sval" id="spdv-${p.key}">${s.speed.toFixed(3)}</span>
+    </div>
+    <div class="fft-row">
+      <span>FFT</span>
+      <button class="fft-btn active" data-key="${p.key}" data-band="off">OFF</button>
+      <button class="fft-btn"       data-key="${p.key}" data-band="bass">B</button>
+      <button class="fft-btn"       data-key="${p.key}" data-band="mid">M</button>
+      <button class="fft-btn"       data-key="${p.key}" data-band="high">H</button>
+      <input type="range" id="fft-${p.key}" min="0" max="1" step="0.01" value="0">
+      <span class="fval" id="fftv-${p.key}">0.00</span>
     </div>`;
 
   // wire events after inserting
@@ -401,6 +455,21 @@ function makeAnimBlock(p) {
     pState[p.key].speed = parseFloat(spdEl.value);
     spdvEl.textContent = pState[p.key].speed.toFixed(3);
     refreshBarMode();
+  });
+
+  // FFT band buttons
+  div.querySelectorAll('.fft-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      div.querySelectorAll('.fft-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      pState[p.key].fftBand = btn.dataset.band;
+    });
+  });
+  const fftEl  = document.getElementById('fft-' + p.key);
+  const fftvEl = document.getElementById('fftv-' + p.key);
+  fftEl.addEventListener('input', () => {
+    pState[p.key].fftMix = parseFloat(fftEl.value);
+    fftvEl.textContent = pState[p.key].fftMix.toFixed(2);
   });
 }
 
@@ -454,6 +523,98 @@ document.querySelectorAll('.cbtn').forEach(btn => {
 document.getElementById('toggle-panel').addEventListener('click', () => {
   document.getElementById('panel').classList.toggle('open');
 });
+
+// ─── Save / Load config ───────────────────────────────────────────────────────
+const STORAGE_KEY = 'beepboop_configs';
+
+function getConfigs() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; } catch { return {}; }
+}
+
+function saveConfig(name) {
+  if (!name.trim()) return;
+  const snap = {
+    curve,
+    pState: Object.fromEntries(ANIM_PARAMS.map(p => [p.key, { ...pState[p.key] }])),
+    sState: { ...sState },
+  };
+  const configs = getConfigs();
+  configs[name.trim()] = snap;
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(configs));
+  renderSavedList();
+}
+
+function loadConfig(name) {
+  const cfg = getConfigs()[name];
+  if (!cfg) return;
+  // curve
+  curve = cfg.curve || 'sine';
+  document.querySelectorAll('.cbtn').forEach(b => {
+    b.classList.toggle('active', b.dataset.curve === curve);
+  });
+  // pState
+  ANIM_PARAMS.forEach(p => {
+    const saved = cfg.pState[p.key];
+    if (!saved) return;
+    Object.assign(pState[p.key], saved);
+    // sync UI
+    const s = pState[p.key];
+    const setV = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };
+    const setT = (id, v, d=2) => { const el = document.getElementById(id); if (el) el.textContent = parseFloat(v).toFixed(d); };
+    setV('min-'+p.key, s.min);  setT('minv-'+p.key, s.min);
+    setV('max-'+p.key, s.max);  setT('maxv-'+p.key, s.max);
+    setV('spd-'+p.key, s.speed); setT('spdv-'+p.key, s.speed, 3);
+    setV('fft-'+p.key, s.fftMix); setT('fftv-'+p.key, s.fftMix);
+    // fft band buttons
+    document.querySelectorAll(`.fft-btn[data-key="${p.key}"]`).forEach(b => {
+      b.classList.toggle('active', b.dataset.band === s.fftBand);
+    });
+    // bar mode
+    const barEl = document.getElementById('bar-'+p.key);
+    if (barEl) barEl.classList.toggle('manual', s.speed < 0.001);
+  });
+  // sState
+  Object.keys(cfg.sState || {}).forEach(k => {
+    sState[k] = cfg.sState[k];
+    const el = document.getElementById('s-'+k);
+    if (el) el.value = sState[k];
+    const vEl = document.getElementById('val-'+k);
+    if (vEl) vEl.textContent = sState[k].toFixed(2);
+  });
+  showLabel(`loaded: ${name}`);
+}
+
+function deleteConfig(name) {
+  const configs = getConfigs();
+  delete configs[name];
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(configs));
+  renderSavedList();
+}
+
+function renderSavedList() {
+  const list = document.getElementById('saved-list');
+  const configs = getConfigs();
+  list.innerHTML = '';
+  Object.keys(configs).forEach(name => {
+    const item = document.createElement('div');
+    item.className = 'saved-item';
+    item.innerHTML = `<span>${name}</span><span class="del">✕</span>`;
+    item.querySelector('span').addEventListener('click', () => loadConfig(name));
+    item.querySelector('.del').addEventListener('click', e => { e.stopPropagation(); deleteConfig(name); });
+    list.appendChild(item);
+  });
+}
+
+document.getElementById('save-btn').addEventListener('click', () => {
+  const name = document.getElementById('save-name').value;
+  saveConfig(name);
+  document.getElementById('save-name').value = '';
+});
+document.getElementById('save-name').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('save-btn').click();
+});
+
+renderSavedList();
 
 // ─── applyPreset ─────────────────────────────────────────────────────────────
 function applyPreset(pr) {
@@ -545,17 +706,21 @@ function render() {
   updateFFT();
   animateParams(t);
 
-  gl.uniform1f(U.uBass,      sBass   * sState.bassDrive);
-  gl.uniform1f(U.uMid,       sMid    * sState.midDrive);
-  gl.uniform1f(U.uHigh,      sHigh   * sState.highDrive);
-  gl.uniform1f(U.uEnergy,    sEnergy * sState.bassDrive);
-  gl.uniform1f(U.uRotSpeed,  pState.rotSpeed.val);
-  gl.uniform1f(U.uDeform,    pState.deform.val);
-  gl.uniform1f(U.uNoiseAmp,  pState.noiseAmp.val);
-  gl.uniform1f(U.uLinkBlend, pState.linkBlend.val);
-  gl.uniform1f(U.uWaveAmp,   pState.waveAmp.val);
-  gl.uniform1f(U.uCMulX,     pState.cMulX.val);
-  gl.uniform1f(U.uCMulY,     pState.cMulY.val);
+  gl.uniform1f(U.uBass,   sBass   * sState.bassDrive);
+  gl.uniform1f(U.uMid,    sMid    * sState.midDrive);
+  gl.uniform1f(U.uHigh,   sHigh   * sState.highDrive);
+  gl.uniform1f(U.uEnergy, sEnergy * sState.bassDrive);
+
+  // Apply per-param FFT mix on top of animated value
+  const fftBands = { bass: sBass, mid: sMid, high: sHigh, off: 0 };
+  const uKeys = { rotSpeed:'uRotSpeed', deform:'uDeform', noiseAmp:'uNoiseAmp',
+                  linkBlend:'uLinkBlend', waveAmp:'uWaveAmp', cMulX:'uCMulX', cMulY:'uCMulY' };
+  ANIM_PARAMS.forEach(p => {
+    const s = pState[p.key];
+    const band = fftBands[s.fftBand] ?? 0;
+    const boosted = Math.min(p.absMax, s.val + band * s.fftMix * (p.absMax - p.absMin));
+    gl.uniform1f(U[uKeys[p.key]], boosted);
+  });
 
   gl.uniform2f(U.iResolution, canvas.width, canvas.height);
   gl.uniform1f(U.iTime, t);
